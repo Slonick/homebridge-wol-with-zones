@@ -1,11 +1,8 @@
 import {API} from 'homebridge';
-
-import {PLATFORM_NAME} from './settings';
 import {WOLZonePlatform} from './platform';
 
-/**
- * This method registers the platform with Homebridge
- */
+import {PLATFORM_NAME} from './settings';
+
 export = (api: API) => {
-    api.registerPlatform(PLATFORM_NAME, WOLZonePlatform);
+  api.registerPlatform(PLATFORM_NAME, WOLZonePlatform);
 };
