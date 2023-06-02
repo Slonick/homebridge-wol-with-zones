@@ -1,4 +1,4 @@
 export enum OS {
-    Windows = 'windows',
-    MacOS = 'macos'
+  Windows = 'windows',
+  MacOS = 'macos'
 }
