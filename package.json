@@ -1,5 +1,4 @@
 {
-  "private": true,
   "displayName": "WOL With Zones",
   "name": "homebridge-wol-zone",
   "version": "1.0.0",
