@@ -1,16 +1,195 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "WOLZonePlatform",
   "pluginType": "platform",
   "singular": true,
   "schema": {
     "type": "object",
     "properties": {
-      "name": {
-        "title": "Name",
-        "type": "string",
-        "required": true,
-        "default": "Example Dynamic Platform"
+      "zones": {
+        "title": "Zones",
+        "type": "array",
+        "items": {
+          "title": "Zone",
+          "type": "object",
+          "properties": {
+            "name": {
+              "title": "Name",
+              "type": "string",
+              "required": true
+            },
+            "interval": {
+              "title": "Interval to check status for changes automatically",
+              "description": "Interval in seconds to check for status and update.",
+              "type": "number",
+              "placeholder": "30",
+              "required": true
+            },
+            "changesForTrigger": {
+              "title": "The number of checks necessary to trigger a state change",
+              "type": "number",
+              "default": "5",
+              "required": true
+            },
+            "devices": {
+              "title": "Devices",
+              "type": "array",
+              "items": {
+                "title": "Device",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "title": "Name",
+                    "description": "The name of the Mac Device",
+                    "type": "string",
+                    "required": true,
+                    "placeholder": "Name"
+                  },
+                  "platform": {
+                    "title": "Platform",
+                    "type": "number",
+                    "default": "0",
+                    "oneOf": [
+                      {
+                        "title": "Windows",
+                        "enum": [
+                          "0"
+                        ]
+                      },
+                      {
+                        "title": "Mac OS",
+                        "enum": [
+                          "1"
+                        ]
+                      }
+                    ],
+                    "required": true
+                  },
+                  "host": {
+                    "title": "IP address or hostname",
+                    "type": "string",
+                    "required": true,
+                    "placeholder": "192.168.0.2"
+                  },
+                  "username": {
+                    "title": "Username for login",
+                    "type": "string",
+                    "required": true,
+                    "placeholder": "username"
+                  },
+                  "password": {
+                    "title": "Password",
+                    "type": "string",
+                    "required": true,
+                    "placeholder": "password",
+                    "condition": {
+                      "functionBody": "return model.zones[arrayIndices[0]].devices[arrayIndices[1]].platform === 0;"
+                    }
+                  },
+                  "mac": {
+                    "title": "MAC Address",
+                    "type": "string",
+                    "required": true,
+                    "placeholder": "mac address",
+                    "pattern": "^([A-Fa-f0-9]{2}:){5}[A-Fa-f0-9]{2}$",
+                    "condition": {
+                      "functionBody": "return model.zones[arrayIndices[0]].devices[arrayIndices[1]].platform === 0;"
+                    }
+                  },
+                  "wakeGraceTime": {
+                    "title": "Wake grace time",
+                    "description": "Number of seconds to wait after startup before checking online status and issuing the wake command.",
+                    "type": "integer",
+                    "required": true,
+                    "default": 45
+                  },
+                  "shutdownGraceTime": {
+                    "title": "Shutdown grace time",
+                    "description": "Number of seconds to wait after shutdown before checking offline status.",
+                    "type": "integer",
+                    "required": true,
+                    "default": 30
+                  },
+                  "architecture": {
+                    "title": "Architecture",
+                    "type": "number",
+                    "oneOf": [
+                      {
+                        "title": "Intel based",
+                        "enum": [
+                          "0"
+                        ]
+                      },
+                      {
+                        "title": "Apple silicon",
+                        "enum": [
+                          "1"
+                        ]
+                      }
+                    ],
+                    "required": true,
+                    "condition": {
+                      "functionBody": "return model.zones[arrayIndices[0]].devices[arrayIndices[1]].platform === 1;"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
-  }
+  },
+  "layout": [
+    {
+      "key": "zones",
+      "type": "array",
+      "orderable": false,
+      "buttonText": "Add Zone",
+      "items": [
+        {
+          "type": "fieldset",
+          "title": "Zone",
+          "items": [
+            "zones[].name",
+            "zones[].interval",
+            "zones[].changesForTrigger",
+            {
+              "type": "fieldset",
+              "title": "Devices",
+              "expandable": true,
+              "expanded": false,
+              "items": [
+                {
+                  "notitle": true,
+                  "key": "zones[].devices",
+                  "type": "array",
+                  "orderable": false,
+                  "buttonText": "Add Device",
+                  "items": [
+                    {
+                      "type": "div",
+                      "items": [
+                        "zones[].devices[].name",
+                        "zones[].devices[].platform",
+                        "zones[].devices[].host",
+                        "zones[].devices[].username",
+                        {
+                          "key": "zones[].devices[].password",
+                          "type": "password"
+                        },
+                        "zones[].devices[].mac",
+                        "zones[].devices[].wakeGraceTime",
+                        "zones[].devices[].shutdownGraceTime",
+                        "zones[].devices[].architecture"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
