@@ -2,6 +2,7 @@
   "pluginAlias": "WOLZonePlatform",
   "pluginType": "platform",
   "singular": true,
+  "fixArrays": true,
   "schema": {
     "type": "object",
     "properties": {
@@ -47,18 +48,18 @@
                   "platform": {
                     "title": "Platform",
                     "type": "number",
-                    "default": "0",
+                    "default": 0,
                     "oneOf": [
                       {
                         "title": "Windows",
                         "enum": [
-                          "0"
+                          0
                         ]
                       },
                       {
                         "title": "Mac OS",
                         "enum": [
-                          "1"
+                          1
                         ]
                       }
                     ],
@@ -116,13 +117,13 @@
                       {
                         "title": "Intel based",
                         "enum": [
-                          "0"
+                          0
                         ]
                       },
                       {
                         "title": "Apple silicon",
                         "enum": [
-                          "1"
+                          1
                         ]
                       }
                     ],
@@ -146,25 +147,93 @@
       "title": "{{ value.name || 'new zone' }}",
       "items": [
         "zones[].name",
-        "zones[].interval",
-        "zones[].changesForTrigger",
         {
-          "key": "zones[].devices",
-          "type": "tabarray",
-          "title": "{{ value.name || 'new device' }}",
+          "key": "zones[]",
+          "type": "fieldset",
+          "title": "Advanced",
+          "expandable": true,
           "items": [
-            "zones[].devices[].name",
-            "zones[].devices[].platform",
-            "zones[].devices[].host",
-            "zones[].devices[].username",
+            "zones[].interval",
+            "zones[].changesForTrigger"
+          ]
+        },
+        {
+          "key": "zones[]",
+          "type": "fieldset",
+          "title": "Devices",
+          "expandable": true,
+          "items": [
             {
-              "key": "zones[].devices[].password",
-              "type": "password"
-            },
-            "zones[].devices[].mac",
-            "zones[].devices[].wakeGraceTime",
-            "zones[].devices[].shutdownGraceTime",
-            "zones[].devices[].architecture"
+              "key": "zones[].devices",
+              "type": "tabarray",
+              "title": "{{ value.name || 'new device' }}",
+              "items": [
+                {
+                  "key": "zones[].devices[]",
+                  "type": "flex",
+                  "flex-flow": "row wrap",
+                  "notitle": true,
+                  "items": [
+                    {
+                      "key": "zones[].devices[].name",
+                      "flex": "1 1 45%"
+                    },
+                    {
+                      "notitle": true,
+                      "flex": "1 1 10%"
+                    },
+                    {
+                      "key": "zones[].devices[].platform",
+                      "flex": "1 1 45%"
+                    }
+                  ]
+                },
+                {
+                  "key": "zones[].devices[]",
+                  "type": "help",
+                  "helpvalue": "<div class=\"alert alert-warning\" role=\"alert\">For work correctly with Windows, you need to make sure that commands from the \"net\" family (to shutdown used the \"net rpc ...\" command) are available on the device with Homebridge.</div>",
+                  "condition": {
+                    "functionBody": "return model.zones[arrayIndices[0]].devices[arrayIndices[1]].platform === 0;"
+                  }
+                },
+                {
+                  "key": "zones[].devices[]",
+                  "type": "help",
+                  "helpvalue": "<div class=\"alert alert-warning\" role=\"alert\">For work correctly with MacOS, you must first set up SSH and a pair of access keys between your MacOS device and a device with Homebridge.</div>",
+                  "condition": {
+                    "functionBody": "return model.zones[arrayIndices[0]].devices[arrayIndices[1]].platform === 1;"
+                  }
+                },
+                "zones[].devices[].host",
+                "zones[].devices[].username",
+                {
+                  "key": "zones[].devices[].password",
+                  "type": "password"
+                },
+                "zones[].devices[].mac",
+                "zones[].devices[].architecture",
+                {
+                  "key": "zones[].devices[]",
+                  "type": "flex",
+                  "flex-flow": "row",
+                  "notitle": true,
+                  "items": [
+                    {
+                      "key": "zones[].devices[].wakeGraceTime",
+                      "flex": "1 1 45%"
+                    },
+                    {
+                      "notitle": true,
+                      "flex": "1 1 10%"
+                    },
+                    {
+                      "key": "zones[].devices[].shutdownGraceTime",
+                      "flex": "1 1 45%"
+                    }
+                  ]
+                }
+              ]
+            }
           ]
         }
       ]
