@@ -33,6 +33,11 @@ export class WOLZonePlatform implements DynamicPlatformPlugin {
 
   discoverDevices() {
     for (const zone of this.config.zones) {
+      if (!zone.name) {
+        this.log.warn('Invalid zone config');
+        continue;
+      }
+
       this.setupAccessory(zone);
     }
   }

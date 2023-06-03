@@ -18,6 +18,8 @@ export abstract class ZoneDevice {
                         public host: string,) {
   }
 
+  abstract isValid(): boolean;
+
   abstract getStatus(): Promise<boolean>;
 
   abstract sleep(): Promise<void>;

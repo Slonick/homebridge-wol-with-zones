@@ -51,6 +51,17 @@ export class MacOS extends ZoneDevice {
     );
   }
 
+  isValid(): boolean {
+    return <boolean>(
+      this.name &&
+      this.architecture &&
+      this.host &&
+      this.username &&
+      this.wakeGraceTime >= 0 &&
+      this.shutdownGraceTime >= 0
+    );
+  }
+
   async getStatus(): Promise<boolean> {
     if (!this.suspendUpdate) {
       const result = await this.execSSH(this._statusCommand.command);
@@ -61,8 +72,6 @@ export class MacOS extends ZoneDevice {
   }
 
   async sleep(): Promise<void> {
-    console.info(`Sleep ${this.name}`);
-
     this.suspendUpdate = true;
     await this.execSSH('pmset sleepnow');
     await wait(this.shutdownGraceTime * 1000);
@@ -70,8 +79,6 @@ export class MacOS extends ZoneDevice {
   }
 
   async wake(): Promise<void> {
-    console.info(`Wake ${this.name}`);
-
     this.suspendUpdate = true;
     await this.execSSH('caffeinate -u -t 1');
     await wait(this.wakeGraceTime * 1000);

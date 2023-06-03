@@ -142,51 +142,29 @@
   "layout": [
     {
       "key": "zones",
-      "type": "array",
-      "orderable": false,
-      "buttonText": "Add Zone",
+      "type": "tabarray",
+      "title": "{{ value.name || 'new zone' }}",
       "items": [
+        "zones[].name",
+        "zones[].interval",
+        "zones[].changesForTrigger",
         {
-          "type": "fieldset",
-          "title": "Zone",
+          "key": "zones[].devices",
+          "type": "tabarray",
+          "title": "{{ value.name || 'new device' }}",
           "items": [
-            "zones[].name",
-            "zones[].interval",
-            "zones[].changesForTrigger",
+            "zones[].devices[].name",
+            "zones[].devices[].platform",
+            "zones[].devices[].host",
+            "zones[].devices[].username",
             {
-              "type": "fieldset",
-              "title": "Devices",
-              "expandable": true,
-              "expanded": false,
-              "items": [
-                {
-                  "notitle": true,
-                  "key": "zones[].devices",
-                  "type": "array",
-                  "orderable": false,
-                  "buttonText": "Add Device",
-                  "items": [
-                    {
-                      "type": "div",
-                      "items": [
-                        "zones[].devices[].name",
-                        "zones[].devices[].platform",
-                        "zones[].devices[].host",
-                        "zones[].devices[].username",
-                        {
-                          "key": "zones[].devices[].password",
-                          "type": "password"
-                        },
-                        "zones[].devices[].mac",
-                        "zones[].devices[].wakeGraceTime",
-                        "zones[].devices[].shutdownGraceTime",
-                        "zones[].devices[].architecture"
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
+              "key": "zones[].devices[].password",
+              "type": "password"
+            },
+            "zones[].devices[].mac",
+            "zones[].devices[].wakeGraceTime",
+            "zones[].devices[].shutdownGraceTime",
+            "zones[].devices[].architecture"
           ]
         }
       ]

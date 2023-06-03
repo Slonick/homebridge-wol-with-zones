@@ -41,6 +41,11 @@ export class WOLZoneAccessory {
 
     this.devices = this.zone.devices.map(x => this.getDevice(x));
     this.devices.forEach(device => {
+      if (!device.isValid()) {
+        this.log.warn('Invalid device config');
+        return;
+      }
+
       this.log.debug(`Create or restore switch for ${device.name}`);
 
       const service =

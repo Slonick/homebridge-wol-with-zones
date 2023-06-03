@@ -27,6 +27,18 @@ export class Windows extends ZoneDevice {
     );
   }
 
+  isValid(): boolean {
+    return <boolean>(
+      this.name &&
+      this.host &&
+      this.mac &&
+      this.username &&
+      this.password &&
+      this.wakeGraceTime >= 0 &&
+      this.shutdownGraceTime >= 0
+    );
+  }
+
   async getStatus(): Promise<boolean> {
     if (!this.suspendUpdate) {
       const response = await ping.promise.probe(this.host, {
@@ -40,8 +52,6 @@ export class Windows extends ZoneDevice {
   }
 
   async sleep(): Promise<void> {
-    console.info(`Sleep ${this.name}`);
-
     this.suspendUpdate = true;
     this.lastState = false;
     await execAsync(`net rpc shutdown --ipaddress ${this.host} --user ${this.username}%${this.password}`);
@@ -50,8 +60,6 @@ export class Windows extends ZoneDevice {
   }
 
   async wake(): Promise<void> {
-    console.info(`Wake ${this.name}`);
-
     this.suspendUpdate = true;
     this.lastState = true;
     await wake(this.mac);
