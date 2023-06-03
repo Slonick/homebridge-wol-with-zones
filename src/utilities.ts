@@ -3,6 +3,8 @@ import {promisify} from 'util';
 
 import wol from 'wake_on_lan';
 
+const { version: appVersion } = require('./../package.json')
+
 /** An async version of Node's {@link exec}. */
 export const execAsync = promisify(execSync);
 
@@ -42,4 +44,8 @@ export async function setTimeoutAsync(callback: () => Promise<void>, millisecond
     await callback();
     await wait(milliseconds);
   }
+}
+
+export function getVersion() {
+  return appVersion;
 }
