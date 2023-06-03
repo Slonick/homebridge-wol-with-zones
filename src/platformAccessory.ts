@@ -1,11 +1,13 @@
 import {CharacteristicValue, Logger, PlatformAccessory, Service} from 'homebridge';
+
+import {version} from './environments/version';
 import {MacOS} from './plaforms/macos';
 import {Platfotm, ZoneDevice} from './plaforms/platform';
 import {Windows} from './plaforms/windows';
 
 import {WOLZonePlatform} from './platform';
 import {ZoneConfig} from './platformConfig';
-import {getVersion, setTimeoutAsync} from './utilities';
+import {setTimeoutAsync} from './utilities';
 
 export class WOLZoneAccessory {
   private changes = 0;
@@ -30,7 +32,7 @@ export class WOLZoneAccessory {
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Slonick')
       .setCharacteristic(this.platform.Characteristic.Model, accessory.displayName)
       .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.UUID)
-      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, getVersion() as string);
+      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, version);
 
     this.motionSensorSleepService = this.accessory.getService(`Sleep - ${this.zone.name}`) ||
       this.accessory.addService(this.platform.Service.MotionSensor, `Sleep - ${this.zone.name}`, `${this.zone.name}.Sleep`,

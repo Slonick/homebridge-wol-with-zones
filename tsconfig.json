@@ -16,9 +16,7 @@
     "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
-    "noImplicitAny": false,
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true
+    "noImplicitAny": false
   },
   "include": [
     "src/"
