@@ -57,7 +57,7 @@ export class WOLZonePlatform implements DynamicPlatformPlugin {
 
       existingAccessory.context.device = zone;
 
-      new WOLZoneAccessory(this.log, this, existingAccessory);
+      WOLZoneAccessory.Create(this, existingAccessory);
     } else {
       this.log.info('Adding new accessory:', zone.name);
 
@@ -70,7 +70,7 @@ export class WOLZonePlatform implements DynamicPlatformPlugin {
         accessory,
       ]);
 
-      new WOLZoneAccessory(this.log, this, accessory);
+      WOLZoneAccessory.Create(this, accessory);
     }
   }
 }

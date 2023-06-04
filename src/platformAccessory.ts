@@ -1,4 +1,4 @@
-import {CharacteristicValue, Logger, PlatformAccessory, Service} from 'homebridge';
+import {CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
 
 import {version} from './environments/version';
 import {MacOS} from './plaforms/macos';
@@ -7,78 +7,23 @@ import {Windows} from './plaforms/windows';
 
 import {WOLZonePlatform} from './platform';
 import {ZoneConfig} from './platformConfig';
-import {setTimeoutAsync} from './utilities';
+import {setIntervalAsync} from './utilities';
 
 export class WOLZoneAccessory {
   private changes = 0;
   private currentState = false;
-  private suspendUpdate = false;
 
   private zone: ZoneConfig;
-  private readonly devices: ZoneDevice[];
-  private motionSensorSleepService: Service;
-  private motionSensorWakeService: Service;
+  private devices: ZoneDevice[] = [];
+  private motionSensorSleepService?: Service;
+  private motionSensorWakeService?: Service;
 
-  constructor(
-    public readonly log: Logger,
+  private constructor(
     private readonly platform: WOLZonePlatform,
     private readonly accessory: PlatformAccessory,
   ) {
 
     this.zone = accessory.context.device as ZoneConfig;
-
-    // set accessory information
-    this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Slonick')
-      .setCharacteristic(this.platform.Characteristic.Model, accessory.displayName)
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.UUID)
-      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, version);
-
-    this.motionSensorSleepService = this.accessory.getService(`Sleep - ${this.zone.name}`) ||
-      this.accessory.addService(this.platform.Service.MotionSensor, `Sleep - ${this.zone.name}`, `${this.zone.name}.Sleep`,
-      );
-
-    this.motionSensorWakeService = this.accessory.getService(`Wake - ${this.zone.name}`) ||
-      this.accessory.addService(this.platform.Service.MotionSensor, `Wake - ${this.zone.name}`, `${this.zone.name}.Wake`);
-
-    this.devices = this.zone.devices.map(x => this.getDevice(x));
-    this.devices.forEach(device => {
-      if (!device.isValid()) {
-        this.log.warn('Invalid device config');
-        return;
-      }
-
-      this.log.debug(`Create or restore switch for ${device.name}`);
-
-      const service =
-        this.accessory.getService(device.name) ||
-        this.accessory.addService(this.platform.Service.Switch, device.name, device.host);
-
-      service.setCharacteristic(this.platform.Characteristic.Name, device.name);
-
-      service.getCharacteristic(this.platform.Characteristic.On)
-        .onSet(async (value: CharacteristicValue) => {
-          try {
-            const isOn = await device.getStatus();
-            if (isOn !== value) {
-              await this.updateStatus(!isOn, true);
-              this.suspendUpdate = true;
-
-              value === true
-                ? await device.wake()
-                : await device.sleep();
-
-              this.suspendUpdate = true;
-            }
-          } catch (e) {
-            this.log.error(JSON.stringify(e));
-          }
-        })
-        .onGet(async () => await device.getStatus());
-    });
-
-    setTimeoutAsync(this.updateStatusScheduler.bind(this), this.zone.interval * 1000,
-    );
   }
 
   private async updateStatusScheduler() {
@@ -89,10 +34,6 @@ export class WOLZoneAccessory {
   }
 
   private async updateStatus(isOn: boolean, immediate = false) {
-    if (this.suspendUpdate) {
-      return;
-    }
-
     if (this.currentState !== isOn) {
       this.changes++;
       this.platform.log.debug(`${this.changes} of ${this.zone.changesForTrigger} required state changes.`);
@@ -121,5 +62,64 @@ export class WOLZoneAccessory {
       case Platfotm.MacOS:
         return MacOS.fromConfig(device);
     }
+  }
+
+  static Create(platform: WOLZonePlatform, accessory: PlatformAccessory) {
+    const zoneAccessory = new WOLZoneAccessory(platform, accessory);
+    zoneAccessory.setup();
+  }
+
+  private setup() {
+    // set accessory information
+    this.accessory.getService(this.platform.Service.AccessoryInformation)!
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Slonick')
+      .setCharacteristic(this.platform.Characteristic.Model, this.accessory.displayName)
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, this.accessory.UUID)
+      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, version);
+
+    this.motionSensorSleepService = this.accessory.getService(`Sleep - ${this.zone.name}`) ||
+      this.accessory.addService(this.platform.Service.MotionSensor, `Sleep - ${this.zone.name}`, `${this.zone.name}.Sleep`,
+      );
+
+    this.motionSensorWakeService = this.accessory.getService(`Wake - ${this.zone.name}`) ||
+      this.accessory.addService(this.platform.Service.MotionSensor, `Wake - ${this.zone.name}`, `${this.zone.name}.Wake`);
+
+    this.devices = this.zone.devices.map(x => this.getDevice(x));
+    this.devices.forEach(device => {
+      if (!device.isValid()) {
+        this.platform.log.warn('Invalid device config');
+        return;
+      }
+
+      this.platform.log.debug(`Create or restore switch for ${device.name}`);
+
+      const service =
+        this.accessory.getService(device.name) ||
+        this.accessory.addService(this.platform.Service.Switch, device.name, device.host);
+
+      service.setCharacteristic(this.platform.Characteristic.Name, device.name);
+
+      service.getCharacteristic(this.platform.Characteristic.On)
+        .onSet(async (value: CharacteristicValue) => {
+          try {
+            const isOn = await device.getStatus();
+            if (isOn !== value) {
+              await this.updateStatus(!isOn, true);
+
+              value === true
+                ? await device.wake()
+                : await device.sleep();
+
+            }
+          } catch (e) {
+            this.platform.log.error(JSON.stringify(e));
+          }
+        })
+        .onGet(async () => await device.getStatus());
+    });
+
+    setIntervalAsync(async () => {
+      await this.updateStatusScheduler();
+    }, this.zone.interval * 1000);
   }
 }

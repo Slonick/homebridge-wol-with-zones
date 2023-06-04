@@ -37,9 +37,16 @@ export function wait(milliseconds: number): Promise<void> {
   });
 }
 
-export async function setTimeoutAsync(callback: () => Promise<void>, milliseconds: number): Promise<void> {
-  while (milliseconds > 0) {
-    await callback();
-    await wait(milliseconds);
-  }
+export function setIntervalAsync(fn: () => Promise<void>, delay: number): () => void {
+  let handle: NodeJS.Timeout | undefined;
+  const loop = async () => {
+    await fn();
+    handle = setTimeout(loop, delay);
+  };
+  handle = setTimeout(loop, delay);
+  return () => {
+    if (handle) {
+      clearTimeout(handle);
+    }
+  };
 }
