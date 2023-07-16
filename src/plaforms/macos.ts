@@ -1,5 +1,6 @@
 import {execAsync, ExecResult, wait} from "../utilities";
 import {ZoneDevice} from './platform';
+import {WOLZonePlatform} from "../platform";
 
 export enum MacArchitecture {
   intel,
@@ -14,13 +15,14 @@ export type StatusCommand = {
 export class MacOS extends ZoneDevice {
   private _statusCommand: StatusCommand;
 
-  constructor(public name: string,
+  constructor(pluginPlatform: WOLZonePlatform,
+              name: string,
               public architecture: MacArchitecture,
-              public host: string,
+              host: string,
               public username: string,
               public wakeGraceTime: number,
               public shutdownGraceTime: number) {
-    super(name, host);
+    super(pluginPlatform, name, host);
 
     switch (this.architecture) {
       case MacArchitecture.intel:
@@ -40,8 +42,9 @@ export class MacOS extends ZoneDevice {
     }
   }
 
-  static fromConfig(config: any): MacOS {
+  static fromConfig(pluginPlatform: WOLZonePlatform, config: any): MacOS {
     return new MacOS(
+      pluginPlatform,
       config.name,
       config.architecture,
       config.host,
@@ -66,9 +69,13 @@ export class MacOS extends ZoneDevice {
     if (!this.suspendUpdate) {
       try {
         const result = await this.execSSH(this._statusCommand.command);
-        this.lastState = this._statusCommand.isOn(result.stdout.toString());
+
+        if (!this.suspendUpdate) {
+          this.lastState = this._statusCommand.isOn(result.stdout.toString());
+        }
+
       } catch (e) {
-        //ignored
+        this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}): ${e}`);
       }
     }
 
@@ -76,17 +83,29 @@ export class MacOS extends ZoneDevice {
   }
 
   async sleep(): Promise<void> {
-    this.suspendUpdate = true;
-    await this.execSSH('pmset displaysleepnow');
-    await wait(this.shutdownGraceTime * 1000);
-    this.suspendUpdate = false;
+    try {
+      this.suspendUpdate = true;
+      this.lastState = false;
+      await this.execSSH('pmset displaysleepnow');
+      await wait(this.shutdownGraceTime * 1000);
+    } catch (e) {
+      this.pluginPlatform.log.error(`An error occurred while sleeping ${this.name} (${this.host}): ${e}`);
+    } finally {
+      this.suspendUpdate = false;
+    }
   }
 
   async wake(): Promise<void> {
-    this.suspendUpdate = true;
-    await this.execSSH('caffeinate -u -t 1');
-    await wait(this.wakeGraceTime * 1000);
-    this.suspendUpdate = false;
+    try {
+      this.suspendUpdate = true;
+      this.lastState = true;
+      await this.execSSH('caffeinate -u -t 1');
+      await wait(this.wakeGraceTime * 1000);
+    } catch (e) {
+      this.pluginPlatform.log.error(`An error occurred while waking ${this.name} (${this.host}): ${e}`);
+    } finally {
+      this.suspendUpdate = false;
+    }
   }
 
   private async execSSH(command: string): Promise<ExecResult> {

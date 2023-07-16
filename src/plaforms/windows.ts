@@ -1,22 +1,25 @@
 import ping from "ping"
 import {execAsync, wait, wake} from "../utilities";
 import {ZoneDevice} from './platform';
+import {WOLZonePlatform} from "../platform";
 
 export class Windows extends ZoneDevice {
 
-  constructor(public name: string,
-              public host: string,
+  constructor(platform: WOLZonePlatform,
+              name: string,
+              host: string,
               public mac: string,
               public username: string,
               public password: string,
               public wakeGraceTime: number,
               public shutdownGraceTime: number
   ) {
-    super(name, host);
+    super(platform, name, host);
   }
 
-  static fromConfig(config: any): Windows {
+  static fromConfig(pluginPlatform: WOLZonePlatform, config: any): Windows {
     return new Windows(
+      pluginPlatform,
       config.name,
       config.host,
       config.mac,
@@ -46,9 +49,12 @@ export class Windows extends ZoneDevice {
           timeout: 1
         });
 
-        this.lastState = response.alive;
+        if (!this.suspendUpdate) {
+          this.lastState = response.alive;
+        }
+        
       } catch (e) {
-        //ignored
+        this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}): ${e}`);
       }
     }
 
@@ -56,19 +62,29 @@ export class Windows extends ZoneDevice {
   }
 
   async sleep(): Promise<void> {
-    this.suspendUpdate = true;
-    this.lastState = false;
-    await execAsync(`net rpc shutdown --ipaddress ${this.host} --user ${this.username}%${this.password}`);
-    await wait(this.shutdownGraceTime * 1000);
-    this.suspendUpdate = false;
+    try {
+      this.suspendUpdate = true;
+      this.lastState = false;
+      await execAsync(`net rpc shutdown --ipaddress ${this.host} --user ${this.username}%${this.password}`);
+      await wait(this.shutdownGraceTime * 1000);
+    } catch (e) {
+      this.pluginPlatform.log.error(`An error occurred while sleeping ${this.name} (${this.host}): ${e}`);
+    } finally {
+      this.suspendUpdate = false;
+    }
   }
 
   async wake(): Promise<void> {
-    this.suspendUpdate = true;
-    this.lastState = true;
-    await wake(this.mac);
-    await wait(this.wakeGraceTime * 1000);
-    this.suspendUpdate = false;
+    try {
+      this.suspendUpdate = true;
+      this.lastState = true;
+      await wake(this.mac);
+      await wait(this.wakeGraceTime * 1000);
+    } catch (e) {
+      this.pluginPlatform.log.error(`An error occurred while waking ${this.name} (${this.host}): ${e}`);
+    } finally {
+      this.suspendUpdate = false;
+    }
   }
 
 }

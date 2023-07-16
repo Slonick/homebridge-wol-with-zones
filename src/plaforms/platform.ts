@@ -1,4 +1,5 @@
 import EventEmitter from 'events';
+import {WOLZonePlatform} from "../platform";
 
 
 export enum Platfotm {
@@ -14,7 +15,8 @@ export abstract class ZoneDevice {
   protected lastState: boolean = false;
   protected suspendUpdate: boolean = false;
 
-  protected constructor(public name: string,
+  protected constructor(protected pluginPlatform: WOLZonePlatform,
+                        public name: string,
                         public host: string,) {
   }
 

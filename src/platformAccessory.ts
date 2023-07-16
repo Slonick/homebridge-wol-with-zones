@@ -63,9 +63,9 @@ export class WOLZoneAccessory {
   private getDevice(device: ZoneDevice) {
     switch (device.platform) {
       case Platfotm.Windows:
-        return Windows.fromConfig(device);
+        return Windows.fromConfig(this.platform, device);
       case Platfotm.MacOS:
-        return MacOS.fromConfig(device);
+        return MacOS.fromConfig(this.platform, device);
     }
   }
 
