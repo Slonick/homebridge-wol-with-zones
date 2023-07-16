@@ -1,5 +1,5 @@
 import ping from "ping"
-import {execAsync, wait, wake} from "../utilities";
+import {execAsync, wake} from "../utilities";
 import {ZoneDevice} from './platform';
 import {WOLZonePlatform} from "../platform";
 
@@ -42,17 +42,13 @@ export class Windows extends ZoneDevice {
     );
   }
 
-  async getStatus(): Promise<boolean> {
-    if (!this.suspendUpdate) {
+  async getStatus(fromCache: boolean): Promise<boolean> {
+    if (!this.suspendUpdate && !fromCache) {
       try {
         const response = await ping.promise.probe(this.host, {
           timeout: 1
         });
-
-        if (!this.suspendUpdate) {
-          this.lastState = response.alive;
-        }
-
+        this.lastState = response.alive;
       } catch (e) {
         this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}):`, e);
       }
@@ -63,26 +59,22 @@ export class Windows extends ZoneDevice {
 
   async sleep(): Promise<void> {
     try {
-      this.suspendUpdate = true;
-      this.lastState = false;
+      this.setSuspendUpdate(true, false);
       await execAsync(`net rpc shutdown --ipaddress ${this.host} --user ${this.username}%${this.password}`);
-      await wait(this.shutdownGraceTime * 1000);
+      this.setGraceTimer(this.shutdownGraceTime * 1000);
     } catch (e) {
       this.pluginPlatform.log.error(`An error occurred while sleeping ${this.name} (${this.host}):`, e);
-    } finally {
       this.suspendUpdate = false;
     }
   }
 
   async wake(): Promise<void> {
     try {
-      this.suspendUpdate = true;
-      this.lastState = true;
+      this.setSuspendUpdate(true, true);
       await wake(this.mac);
-      await wait(this.wakeGraceTime * 1000);
+      this.setGraceTimer(this.wakeGraceTime * 1000);
     } catch (e) {
       this.pluginPlatform.log.error(`An error occurred while waking ${this.name} (${this.host}):`, e);
-    } finally {
       this.suspendUpdate = false;
     }
   }

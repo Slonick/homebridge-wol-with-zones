@@ -11,7 +11,7 @@ import {setIntervalAsync} from './utilities';
 
 export class WOLZoneAccessory {
   private changes = 0;
-  private currentState = false;
+  private currentState: boolean | null = null;
 
   private zone: ZoneConfig;
   private devices: ZoneDevice[] = [];
@@ -32,19 +32,38 @@ export class WOLZoneAccessory {
   }
 
   private async updateStatusScheduler(immediate = false) {
-    const isOnPromise = await Promise.all(this.devices.map(x => x.getStatus()));
+    const isOnPromise = await Promise.all(this.devices.map(x => x.getStatus(false)));
     const isOn = isOnPromise.some(x => x);
+
+    if (immediate) {
+      this.platform.log.debug(`Immediate update status ${this.currentState} => ${isOn}`);
+    } else {
+      this.platform.log.debug(`Update status ${this.currentState} -> ${isOn}`);
+    }
+
+    await this.updateStatus(isOn, immediate);
+  }
+
+  private async updateStatusFromCache(immediate = false) {
+    const isOnPromise = await Promise.all(this.devices.map(x => x.getStatus(true)));
+    const isOn = isOnPromise.some(x => x);
+
+    if (immediate) {
+      this.platform.log.debug(`Immediate update status from cache ${this.currentState} => ${isOn}`);
+    } else {
+      this.platform.log.debug(`Update status from cache ${this.currentState} -> ${isOn}`);
+    }
 
     await this.updateStatus(isOn, immediate);
   }
 
   private async updateStatus(isOn: boolean, immediate = false) {
-    if (this.currentState !== isOn) {
+    if (this.currentState !== null && this.currentState !== isOn) {
       this.changes++;
       this.platform.log.debug(`${this.changes} of ${this.zone.changesForTrigger} required state changes.`);
     }
 
-    if (this.changes >= this.accessory.context.device.changesForTrigger || immediate) {
+    if ((this.currentState === null || this.changes >= this.accessory.context.device.changesForTrigger || immediate)) {
       this.motionSensorSleepService!.updateCharacteristic(
         this.platform.Characteristic.MotionDetected,
         !isOn,
@@ -102,20 +121,20 @@ export class WOLZoneAccessory {
       service.getCharacteristic(this.platform.Characteristic.On)
         .onSet(async (value: CharacteristicValue) => {
           try {
-            const isOn = await device.getStatus();
+            const isOn = await device.getStatus(false);
             if (isOn !== value) {
 
               value === true
                 ? await device.wake()
                 : await device.sleep();
 
-              await this.updateStatusScheduler(true);
+              await this.updateStatusFromCache(true);
             }
           } catch (e) {
             this.platform.log.error(JSON.stringify(e));
           }
         })
-        .onGet(async () => await device.getStatus());
+        .onGet(async () => await device.getStatus(true));
     });
 
     setIntervalAsync(async () => {
