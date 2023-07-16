@@ -52,9 +52,9 @@ export class Windows extends ZoneDevice {
         if (!this.suspendUpdate) {
           this.lastState = response.alive;
         }
-        
+
       } catch (e) {
-        this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}): ${e}`);
+        this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}):`, e);
       }
     }
 
@@ -68,7 +68,7 @@ export class Windows extends ZoneDevice {
       await execAsync(`net rpc shutdown --ipaddress ${this.host} --user ${this.username}%${this.password}`);
       await wait(this.shutdownGraceTime * 1000);
     } catch (e) {
-      this.pluginPlatform.log.error(`An error occurred while sleeping ${this.name} (${this.host}): ${e}`);
+      this.pluginPlatform.log.error(`An error occurred while sleeping ${this.name} (${this.host}):`, e);
     } finally {
       this.suspendUpdate = false;
     }
@@ -81,7 +81,7 @@ export class Windows extends ZoneDevice {
       await wake(this.mac);
       await wait(this.wakeGraceTime * 1000);
     } catch (e) {
-      this.pluginPlatform.log.error(`An error occurred while waking ${this.name} (${this.host}): ${e}`);
+      this.pluginPlatform.log.error(`An error occurred while waking ${this.name} (${this.host}):`, e);
     } finally {
       this.suspendUpdate = false;
     }

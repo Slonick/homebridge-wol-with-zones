@@ -75,7 +75,7 @@ export class MacOS extends ZoneDevice {
         }
 
       } catch (e) {
-        this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}): ${e}`);
+        this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}):`, e);
       }
     }
 
@@ -89,7 +89,7 @@ export class MacOS extends ZoneDevice {
       await this.execSSH('pmset displaysleepnow');
       await wait(this.shutdownGraceTime * 1000);
     } catch (e) {
-      this.pluginPlatform.log.error(`An error occurred while sleeping ${this.name} (${this.host}): ${e}`);
+      this.pluginPlatform.log.error(`An error occurred while sleeping ${this.name} (${this.host}):`, e);
     } finally {
       this.suspendUpdate = false;
     }
@@ -102,7 +102,7 @@ export class MacOS extends ZoneDevice {
       await this.execSSH('caffeinate -u -t 1');
       await wait(this.wakeGraceTime * 1000);
     } catch (e) {
-      this.pluginPlatform.log.error(`An error occurred while waking ${this.name} (${this.host}): ${e}`);
+      this.pluginPlatform.log.error(`An error occurred while waking ${this.name} (${this.host}):`, e);
     } finally {
       this.suspendUpdate = false;
     }
