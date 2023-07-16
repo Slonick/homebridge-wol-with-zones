@@ -64,8 +64,12 @@ export class MacOS extends ZoneDevice {
 
   async getStatus(): Promise<boolean> {
     if (!this.suspendUpdate) {
-      const result = await this.execSSH(this._statusCommand.command);
-      this.lastState = this._statusCommand.isOn(result.stdout.toString());
+      try {
+        const result = await this.execSSH(this._statusCommand.command);
+        this.lastState = this._statusCommand.isOn(result.stdout.toString());
+      } catch (e) {
+        //ignored
+      }
     }
 
     return this.lastState;

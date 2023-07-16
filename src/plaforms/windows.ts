@@ -41,11 +41,15 @@ export class Windows extends ZoneDevice {
 
   async getStatus(): Promise<boolean> {
     if (!this.suspendUpdate) {
-      const response = await ping.promise.probe(this.host, {
-        timeout: 1
-      });
+      try {
+        const response = await ping.promise.probe(this.host, {
+          timeout: 1
+        });
 
-      this.lastState = response.alive;
+        this.lastState = response.alive;
+      } catch (e) {
+        //ignored
+      }
     }
 
     return this.lastState;

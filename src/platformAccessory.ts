@@ -26,6 +26,11 @@ export class WOLZoneAccessory {
     this.zone = accessory.context.device as ZoneConfig;
   }
 
+  static Create(platform: WOLZonePlatform, accessory: PlatformAccessory) {
+    const zoneAccessory = new WOLZoneAccessory(platform, accessory);
+    zoneAccessory.setup();
+  }
+
   private async updateStatusScheduler() {
     const isOnPromise = await Promise.all(this.devices.map(x => x.getStatus()));
     const isOn = isOnPromise.some(x => x);
@@ -62,11 +67,6 @@ export class WOLZoneAccessory {
       case Platfotm.MacOS:
         return MacOS.fromConfig(device);
     }
-  }
-
-  static Create(platform: WOLZonePlatform, accessory: PlatformAccessory) {
-    const zoneAccessory = new WOLZoneAccessory(platform, accessory);
-    zoneAccessory.setup();
   }
 
   private setup() {
