@@ -77,7 +77,7 @@ export class MacOS extends ZoneDevice {
 
   async sleep(): Promise<void> {
     this.suspendUpdate = true;
-    await this.execSSH('pmset sleepnow');
+    await this.execSSH('pmset displaysleepnow');
     await wait(this.shutdownGraceTime * 1000);
     this.suspendUpdate = false;
   }
