@@ -31,11 +31,11 @@ export class WOLZoneAccessory {
     zoneAccessory.setup();
   }
 
-  private async updateStatusScheduler() {
+  private async updateStatusScheduler(immediate = false) {
     const isOnPromise = await Promise.all(this.devices.map(x => x.getStatus()));
     const isOn = isOnPromise.some(x => x);
 
-    await this.updateStatus(isOn);
+    await this.updateStatus(isOn, immediate);
   }
 
   private async updateStatus(isOn: boolean, immediate = false) {
@@ -104,12 +104,12 @@ export class WOLZoneAccessory {
           try {
             const isOn = await device.getStatus();
             if (isOn !== value) {
-              await this.updateStatus(!isOn, true);
 
               value === true
                 ? await device.wake()
                 : await device.sleep();
 
+              await this.updateStatusScheduler(true);
             }
           } catch (e) {
             this.platform.log.error(JSON.stringify(e));
