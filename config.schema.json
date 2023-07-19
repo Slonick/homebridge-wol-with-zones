@@ -40,7 +40,7 @@
                 "properties": {
                   "name": {
                     "title": "Name",
-                    "description": "The name of the Mac Device",
+                    "description": "The name of Device",
                     "type": "string",
                     "required": true,
                     "placeholder": "Name"
