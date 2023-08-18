@@ -71,6 +71,15 @@
                     "required": true,
                     "placeholder": "192.168.0.2"
                   },
+                  "strictHostKeyChecking": {
+                    "title": "StrictHostKeyChecking",
+                    "description": "The SSH option StrictHostKeyChecking is a security feature that affects how SSH verifies the identity of a remote computer when connecting to it.\n\n",
+                    "type": "boolean",
+                    "default": true,
+                    "condition": {
+                      "functionBody": "return model.zones[arrayIndices[0]].devices[arrayIndices[1]].platform === 1;"
+                    }
+                  },
                   "username": {
                     "title": "Username for login",
                     "type": "string",

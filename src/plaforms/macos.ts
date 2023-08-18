@@ -21,7 +21,8 @@ export class MacOS extends ZoneDevice {
               host: string,
               public username: string,
               public wakeGraceTime: number,
-              public shutdownGraceTime: number) {
+              public shutdownGraceTime: number,
+              public strictHostKeyChecking: boolean) {
     super(pluginPlatform, name, host);
 
     switch (this.architecture) {
@@ -51,6 +52,7 @@ export class MacOS extends ZoneDevice {
       config.username,
       config.wakeGraceTime,
       config.shutdownGraceTime,
+      config.strictHostKeyChecking,
     );
   }
 
@@ -102,7 +104,7 @@ export class MacOS extends ZoneDevice {
 
   private async execSSH(command: string): Promise<ExecResult> {
     return await execAsync(
-      `ssh ${this.username}@${this.host} '${command}'`, {
+      `ssh -o StrictHostKeyChecking=${this.strictHostKeyChecking ? 'yes' : 'no'} ${this.username}@${this.host} '${command}'`, {
         timeout: 5000
       }
     );
