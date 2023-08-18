@@ -214,6 +214,7 @@
                   }
                 },
                 "zones[].devices[].host",
+                "zones[].devices[].strictHostKeyChecking",
                 "zones[].devices[].username",
                 {
                   "key": "zones[].devices[].password",
