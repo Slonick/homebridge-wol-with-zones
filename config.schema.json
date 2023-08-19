@@ -75,7 +75,10 @@
                     "title": "SSH Port",
                     "type": "integer",
                     "required": true,
-                    "default": 22
+                    "default": 22,
+                    "condition": {
+                      "functionBody": "return model.zones[arrayIndices[0]].devices[arrayIndices[1]].platform === 1;"
+                    }
                   },
                   "username": {
                     "title": "Username for login",

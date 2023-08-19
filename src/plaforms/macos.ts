@@ -113,13 +113,33 @@ export class MacOS extends ZoneDevice {
     return new Promise((resolve, reject) => {
       this.client.on('ready', () => {
         this.client.exec(command, (err, stream) => {
+          
           if (err) {
             reject(err);
           }
 
-          stream.on('data', (data: string | Buffer) => {
+          stream.stdout.on('data', (data: string | Buffer) => {
+            this.pluginPlatform.log.debug('stdout:data', data);
             resolve(data.toString());
-          }).stderr.on('data', (data: string | Buffer) => {
+          });
+          
+          stream.on('data', (data: string | Buffer) => {
+            this.pluginPlatform.log.debug('stream:data', data);
+            resolve(data.toString());
+          });
+          
+          stream.on('finish', (data: string | Buffer) => {
+            this.pluginPlatform.log.debug('stream:finish', data);
+            resolve(data.toString());
+          });
+          
+          stream.on('error', (data: string | Buffer) => {
+            this.pluginPlatform.log.debug('stream:error', data);
+            reject(data.toString());
+          });
+          
+          stream.stderr.on('data', (data: string | Buffer) => {
+            this.pluginPlatform.log.debug('stderr:data', data);
             reject(data.toString());
           });
 
