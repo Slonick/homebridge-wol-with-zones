@@ -113,7 +113,7 @@ export class MacOS extends ZoneDevice {
     return new Promise((resolve, reject) => {
       this.client.on('ready', () => {
         this.client.exec(command, (err, stream) => {
-          
+
           if (err) {
             reject(err);
           }
@@ -122,22 +122,22 @@ export class MacOS extends ZoneDevice {
             this.pluginPlatform.log.debug('stdout:data', data);
             resolve(data.toString());
           });
-          
+
           stream.on('data', (data: string | Buffer) => {
             this.pluginPlatform.log.debug('stream:data', data);
             resolve(data.toString());
           });
-          
+
           stream.on('finish', (data: string | Buffer) => {
             this.pluginPlatform.log.debug('stream:finish', data);
             resolve(data.toString());
           });
-          
+
           stream.on('error', (data: string | Buffer) => {
             this.pluginPlatform.log.debug('stream:error', data);
             reject(data.toString());
           });
-          
+
           stream.stderr.on('data', (data: string | Buffer) => {
             this.pluginPlatform.log.debug('stderr:data', data);
             reject(data.toString());
@@ -150,7 +150,23 @@ export class MacOS extends ZoneDevice {
 
   private setupSSH() {
     this.client = new Client();
-    this.client.connect({
+
+    this.client.on('ready', () => {
+      this.pluginPlatform.log.debug(`Client ${this.host}:${this.port}@${this.username} :: ready`);
+
+      this.client.exec('uptime', (err, stream) => {
+        if (err) throw err;
+        stream.on('close', (code, signal) => {
+          this.pluginPlatform.log.debug('Stream :: close :: code: ' + code + ', signal: ' + signal);
+          this.client.end();
+        }).on('data', (data) => {
+          this.pluginPlatform.log.debug('STDOUT: ' + data);
+        }).stderr.on('data', (data) => {
+          this.pluginPlatform.log.debug('STDERR: ' + data);
+        });
+      });
+      
+    }).connect({
       host: this.host,
       port: this.port,
       username: this.username,
