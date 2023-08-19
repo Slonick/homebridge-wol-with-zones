@@ -1,6 +1,6 @@
 import {ZoneDevice} from './platform';
 import {WOLZonePlatform} from "../platform";
-import {Client} from "ssh2";
+import {Client, ConnectConfig} from "ssh2";
 
 export enum MacArchitecture {
   intel,
@@ -14,7 +14,7 @@ export type StatusCommand = {
 
 export class MacOS extends ZoneDevice {
   private _statusCommand: StatusCommand;
-  private client!: Client;
+  private connectConfig: ConnectConfig;
 
   constructor(pluginPlatform: WOLZonePlatform,
               name: string,
@@ -44,7 +44,13 @@ export class MacOS extends ZoneDevice {
         break;
     }
 
-    this.setupSSH();
+    this.connectConfig = {
+      host: this.host,
+      port: this.port,
+      username: this.username,
+      password: this.password,
+      timeout: 5000
+    } as ConnectConfig;
   }
 
   static fromConfig(pluginPlatform: WOLZonePlatform, config: any): MacOS {
@@ -110,18 +116,14 @@ export class MacOS extends ZoneDevice {
   }
 
   private async execSSH(command: string): Promise<string> {
+    const client = new Client();
     return new Promise((resolve, reject) => {
-      this.client.on('ready', () => {
-        this.client.exec(command, (err, stream) => {
+      client.on('ready', () => {
+        client.exec(command, (err, stream) => {
 
           if (err) {
             reject(err);
           }
-
-          stream.stdout.on('data', (data: string | Buffer) => {
-            this.pluginPlatform.log.debug('stdout:data', data);
-            resolve(data.toString());
-          });
 
           stream.on('data', (data: string | Buffer) => {
             this.pluginPlatform.log.debug('stream:data', data);
@@ -144,34 +146,7 @@ export class MacOS extends ZoneDevice {
           });
 
         });
-      });
-    });
-  }
-
-  private setupSSH() {
-    this.client = new Client();
-
-    this.client.on('ready', () => {
-      this.pluginPlatform.log.debug(`Client ${this.host}:${this.port}@${this.username} :: ready`);
-
-      this.client.exec('uptime', (err, stream) => {
-        if (err) throw err;
-        stream.on('close', (code, signal) => {
-          this.pluginPlatform.log.debug('Stream :: close :: code: ' + code + ', signal: ' + signal);
-          this.client.end();
-        }).on('data', (data) => {
-          this.pluginPlatform.log.debug('STDOUT: ' + data);
-        }).stderr.on('data', (data) => {
-          this.pluginPlatform.log.debug('STDERR: ' + data);
-        });
-      });
-      
-    }).connect({
-      host: this.host,
-      port: this.port,
-      username: this.username,
-      password: this.password,
-      timeout: 5000
+      }).connect(this.connectConfig);
     });
   }
 }
