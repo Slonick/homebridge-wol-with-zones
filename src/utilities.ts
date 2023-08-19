@@ -6,11 +6,6 @@ import wol from 'wake_on_lan';
 /** An async version of Node's {@link exec}. */
 export const execAsync = promisify(execSync);
 
-export type ExecResult = {
-  stdout: string | Buffer;
-  stderr: string;
-};
-
 /**
  * Send WoL magic packets.
  * @param macAddress The MAC address of the target.

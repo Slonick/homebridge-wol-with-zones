@@ -71,14 +71,11 @@
                     "required": true,
                     "placeholder": "192.168.0.2"
                   },
-                  "strictHostKeyChecking": {
-                    "title": "StrictHostKeyChecking",
-                    "description": "The SSH option StrictHostKeyChecking is a security feature that affects how SSH verifies the identity of a remote computer when connecting to it.\n\n",
-                    "type": "boolean",
-                    "default": true,
-                    "condition": {
-                      "functionBody": "return model.zones[arrayIndices[0]].devices[arrayIndices[1]].platform === 1;"
-                    }
+                  "port": {
+                    "title": "SSH Port",
+                    "type": "integer",
+                    "required": true,
+                    "default": 22
                   },
                   "username": {
                     "title": "Username for login",
@@ -90,10 +87,7 @@
                     "title": "Password",
                     "type": "string",
                     "required": true,
-                    "placeholder": "password",
-                    "condition": {
-                      "functionBody": "return model.zones[arrayIndices[0]].devices[arrayIndices[1]].platform === 0;"
-                    }
+                    "placeholder": "password"
                   },
                   "mac": {
                     "title": "MAC Address",
@@ -214,7 +208,7 @@
                   }
                 },
                 "zones[].devices[].host",
-                "zones[].devices[].strictHostKeyChecking",
+                "zones[].devices[].port",
                 "zones[].devices[].username",
                 {
                   "key": "zones[].devices[].password",

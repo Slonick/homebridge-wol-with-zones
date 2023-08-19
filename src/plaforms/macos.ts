@@ -1,6 +1,6 @@
-import {execAsync, ExecResult} from "../utilities";
 import {ZoneDevice} from './platform';
 import {WOLZonePlatform} from "../platform";
+import {Client} from "ssh2";
 
 export enum MacArchitecture {
   intel,
@@ -14,15 +14,17 @@ export type StatusCommand = {
 
 export class MacOS extends ZoneDevice {
   private _statusCommand: StatusCommand;
+  private client!: Client;
 
   constructor(pluginPlatform: WOLZonePlatform,
               name: string,
               public architecture: MacArchitecture,
               host: string,
+              private port: number,
               public username: string,
+              public password: string,
               public wakeGraceTime: number,
-              public shutdownGraceTime: number,
-              public strictHostKeyChecking: boolean) {
+              public shutdownGraceTime: number) {
     super(pluginPlatform, name, host);
 
     switch (this.architecture) {
@@ -41,6 +43,8 @@ export class MacOS extends ZoneDevice {
         };
         break;
     }
+
+    this.setupSSH();
   }
 
   static fromConfig(pluginPlatform: WOLZonePlatform, config: any): MacOS {
@@ -49,10 +53,11 @@ export class MacOS extends ZoneDevice {
       config.name,
       config.architecture,
       config.host,
+      config.port,
       config.username,
+      config.password,
       config.wakeGraceTime,
-      config.shutdownGraceTime,
-      config.strictHostKeyChecking,
+      config.shutdownGraceTime
     );
   }
 
@@ -61,7 +66,9 @@ export class MacOS extends ZoneDevice {
       this.name &&
       this.architecture &&
       this.host &&
+      this.port &&
       this.username &&
+      this.password &&
       this.wakeGraceTime >= 0 &&
       this.shutdownGraceTime >= 0
     );
@@ -71,7 +78,7 @@ export class MacOS extends ZoneDevice {
     if (!this.suspendUpdate && !fromCache) {
       try {
         const result = await this.execSSH(this._statusCommand.command);
-        this.lastState = this._statusCommand.isOn(result.stdout.toString());
+        this.lastState = this._statusCommand.isOn(result);
       } catch (e) {
         this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}):`, e);
       }
@@ -102,11 +109,33 @@ export class MacOS extends ZoneDevice {
     }
   }
 
-  private async execSSH(command: string): Promise<ExecResult> {
-    return await execAsync(
-      `ssh -o StrictHostKeyChecking=${this.strictHostKeyChecking ? 'yes' : 'no'} ${this.username}@${this.host} '${command}'`, {
-        timeout: 5000
-      }
-    );
+  private async execSSH(command: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      this.client.on('ready', () => {
+        this.client.exec(command, (err, stream) => {
+          if (err) {
+            reject(err);
+          }
+
+          stream.on('data', (data: string | Buffer) => {
+            resolve(data.toString());
+          }).stderr.on('data', (data: string | Buffer) => {
+            reject(data.toString());
+          });
+
+        });
+      });
+    });
+  }
+
+  private setupSSH() {
+    this.client = new Client();
+    this.client.connect({
+      host: this.host,
+      port: this.port,
+      username: this.username,
+      password: this.password,
+      timeout: 5000
+    });
   }
 }

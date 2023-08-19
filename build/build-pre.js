@@ -11,10 +11,10 @@ const src = `export const version = '${appVersion}';`;
 
 // ensure version module pulls value from package.json
 fs.writeFile(versionFilePath, src, {flag: 'w'}, function (err) {
-  if (err) {
-    return console.log(colors.red(err.toString()));
-  }
+    if (err) {
+        return console.log(colors.red(err.toString()));
+    }
 
-  console.log(colors.green(`Updating application version ${colors.yellow(appVersion)}`));
-  console.log(`${colors.green('Writing version module to ')}${colors.yellow(versionFilePath)}\n`);
+    console.log(colors.green(`Updating application version ${colors.yellow(appVersion)}`));
+    console.log(`${colors.green('Writing version module to ')}${colors.yellow(versionFilePath)}\n`);
 });
