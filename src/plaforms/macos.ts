@@ -14,7 +14,7 @@ export type StatusCommand = {
 
 export class MacOS extends ZoneDevice {
   private _statusCommand: StatusCommand;
-  private connectConfig: ConnectConfig;
+  private readonly connectConfig: ConnectConfig;
 
   constructor(pluginPlatform: WOLZonePlatform,
               name: string,
@@ -83,7 +83,7 @@ export class MacOS extends ZoneDevice {
   async getStatus(fromCache: boolean): Promise<boolean> {
     if (!this.suspendUpdate && !fromCache) {
       try {
-        const result = await this.execSSH(this._statusCommand.command);
+        const result = await this.execSSHWithResult(this._statusCommand.command);
         this.lastState = this._statusCommand.isOn(result);
       } catch (e) {
         this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}):`, e);
@@ -115,7 +115,7 @@ export class MacOS extends ZoneDevice {
     }
   }
 
-  private async execSSH(command: string): Promise<string> {
+  private async execSSH(command: string): Promise<void> {
     const client = new Client();
     return new Promise((resolve, reject) => {
       client.on('ready', () => {
@@ -125,16 +125,50 @@ export class MacOS extends ZoneDevice {
             reject(err);
           }
 
+          stream.on('data', () => {
+            this.pluginPlatform.log.debug('stream:data');
+            resolve();
+          });
+
+          stream.on('finish', () => {
+            resolve();
+          });
+
+          stream.on('error', (data: string | Buffer) => {
+            this.pluginPlatform.log.debug('stream:error', data);
+            reject(data.toString());
+          });
+
+          stream.stderr.on('data', (data: string | Buffer) => {
+            this.pluginPlatform.log.debug('stderr:data', data);
+            reject(data.toString());
+          });
+
+        });
+      }).connect(this.connectConfig);
+    });
+  }
+
+  private async execSSHWithResult(command: string): Promise<string> {
+    const client = new Client();
+    return new Promise((resolve, reject) => {
+      client.on('ready', () => {
+        client.exec(command, (err, stream) => {
+
+          if (err) {
+            reject(err);
+          }
+
+          stream.stdout.on('data', (data: string | Buffer) => {
+            this.pluginPlatform.log.debug('stream:data', data);
+            resolve(data.toString());
+          });
+          
           stream.on('data', (data: string | Buffer) => {
             this.pluginPlatform.log.debug('stream:data', data);
             resolve(data.toString());
           });
-
-          stream.on('finish', (data: string | Buffer) => {
-            this.pluginPlatform.log.debug('stream:finish', data);
-            resolve(data.toString());
-          });
-
+          
           stream.on('error', (data: string | Buffer) => {
             this.pluginPlatform.log.debug('stream:error', data);
             reject(data.toString());
