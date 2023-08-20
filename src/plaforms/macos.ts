@@ -87,6 +87,7 @@ export class MacOS extends ZoneDevice {
         this.lastState = this._statusCommand.isOn(result);
       } catch (e) {
         this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}):`, e);
+        this.lastState = false;
       }
     }
 
@@ -152,35 +153,39 @@ export class MacOS extends ZoneDevice {
   private async execSSHWithResult(command: string): Promise<string> {
     const client = new Client();
     return new Promise((resolve, reject) => {
-      client.on('ready', () => {
-        client.exec(command, (err, stream) => {
+      try {
+        client.on('ready', () => {
+          client.exec(command, (err, stream) => {
 
-          if (err) {
-            reject(err);
-          }
+            if (err) {
+              reject(err);
+            }
 
-          stream.stdout.on('data', (data: string | Buffer) => {
-            this.pluginPlatform.log.debug('stream:data', data);
-            resolve(data.toString());
-          });
-          
-          stream.on('data', (data: string | Buffer) => {
-            this.pluginPlatform.log.debug('stream:data', data);
-            resolve(data.toString());
-          });
-          
-          stream.on('error', (data: string | Buffer) => {
-            this.pluginPlatform.log.debug('stream:error', data);
-            reject(data.toString());
-          });
+            stream.stdout.on('data', (data: string | Buffer) => {
+              this.pluginPlatform.log.debug('stream:data', data);
+              resolve(data.toString());
+            });
 
-          stream.stderr.on('data', (data: string | Buffer) => {
-            this.pluginPlatform.log.debug('stderr:data', data);
-            reject(data.toString());
-          });
+            stream.on('data', (data: string | Buffer) => {
+              this.pluginPlatform.log.debug('stream:data', data);
+              resolve(data.toString());
+            });
 
-        });
-      }).connect(this.connectConfig);
+            stream.on('error', (data: string | Buffer) => {
+              this.pluginPlatform.log.debug('stream:error', data);
+              reject(data.toString());
+            });
+
+            stream.stderr.on('data', (data: string | Buffer) => {
+              this.pluginPlatform.log.debug('stderr:data', data);
+              reject(data.toString());
+            });
+
+          });
+        }).connect(this.connectConfig);
+      } catch (e: any) {
+        reject(e);
+      }
     });
   }
 }
