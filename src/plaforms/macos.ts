@@ -118,7 +118,7 @@ export class MacOS extends ZoneDevice {
 
   private async execSSH(command: string): Promise<void> {
     const client = new Client();
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       client.on('ready', () => {
         client.exec(command, (err, stream) => {
 
@@ -146,13 +146,13 @@ export class MacOS extends ZoneDevice {
           });
 
         });
-      }).connect(this.connectConfig);
-    });
+      }).on('error', reject).connect(this.connectConfig);
+    }).finally(() => client.end());
   }
 
   private async execSSHWithResult(command: string): Promise<string> {
     const client = new Client();
-    return new Promise((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
       try {
         client.on('ready', () => {
           client.exec(command, (err, stream) => {
@@ -182,10 +182,10 @@ export class MacOS extends ZoneDevice {
             });
 
           });
-        }).connect(this.connectConfig);
+        }).on('error', reject).connect(this.connectConfig);
       } catch (e: any) {
         reject(e);
       }
-    });
+    }).finally(() => client.end());
   }
 }
