@@ -146,7 +146,7 @@ export class MacOS extends ZoneDevice {
           });
 
         });
-      }).connect(this.connectConfig);
+      }).on('error', reject).connect(this.connectConfig);
     });
   }
 
@@ -182,7 +182,7 @@ export class MacOS extends ZoneDevice {
             });
 
           });
-        }).connect(this.connectConfig);
+        }).on('error', reject).connect(this.connectConfig);
       } catch (e: any) {
         reject(e);
       }
