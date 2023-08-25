@@ -91,6 +91,7 @@ export class MacOS extends ZoneDevice {
       }
     }
 
+    this.pluginPlatform.log.debug(`${this.host}:${this.port} (${this.name}): ${this.lastState}`);
     return this.lastState;
   }
 

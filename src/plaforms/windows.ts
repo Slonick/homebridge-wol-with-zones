@@ -51,9 +51,11 @@ export class Windows extends ZoneDevice {
         this.lastState = response.alive;
       } catch (e) {
         this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}):`, e);
+        this.lastState = false;
       }
     }
 
+    this.pluginPlatform.log.debug(`${this.host} (${this.name}): ${this.lastState}`);
     return this.lastState;
   }
 
