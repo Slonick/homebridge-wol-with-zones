@@ -45,15 +45,19 @@ export class Windows extends ZoneDevice {
   async getStatus(fromCache: boolean): Promise<boolean> {
     if (!this.suspendUpdate && !fromCache) {
       try {
+        this.pluginPlatform.log.debug(`Begin ping ${this.host} (${this.name})`);
         const response = await ping.promise.probe(this.host, {
           timeout: 1
         });
+        this.pluginPlatform.log.debug(`End ping ${this.host} (${this.name}): ${response.alive}`);
         this.lastState = response.alive;
       } catch (e) {
         this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}):`, e);
+        this.lastState = false;
       }
     }
 
+    this.pluginPlatform.log.debug(`${this.host} (${this.name}): ${this.lastState}`);
     return this.lastState;
   }
 

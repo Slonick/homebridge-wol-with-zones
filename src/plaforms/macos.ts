@@ -83,7 +83,10 @@ export class MacOS extends ZoneDevice {
   async getStatus(fromCache: boolean): Promise<boolean> {
     if (!this.suspendUpdate && !fromCache) {
       try {
+        this.pluginPlatform.log.debug(`Begin ping ${this.host}:${this.port} (${this.name})`);
         const result = await this.execSSHWithResult(this._statusCommand.command);
+        this.pluginPlatform.log.debug(`End ping ${this.host}:${this.port} (${this.name}): ${result?.toString()}`);
+
         this.lastState = this._statusCommand.isOn(result);
       } catch (e) {
         this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}):`, e);
@@ -91,6 +94,7 @@ export class MacOS extends ZoneDevice {
       }
     }
 
+    this.pluginPlatform.log.debug(`${this.host}:${this.port} (${this.name}): ${this.lastState}`);
     return this.lastState;
   }
 
