@@ -47,7 +47,7 @@ export class Windows extends ZoneDevice {
       try {
         this.pluginPlatform.log.debug(`Begin ping ${this.host} (${this.name})`);
         const response = await ping.promise.probe(this.host, {
-          timeout: 1
+          timeout: 5
         });
         this.pluginPlatform.log.debug(`End ping ${this.host} (${this.name}): ${response.alive}`);
         this.lastState = response.alive;
