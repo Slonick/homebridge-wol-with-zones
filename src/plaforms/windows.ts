@@ -1,5 +1,5 @@
 import ping from "ping"
-import {execAsync, wake} from "../utilities";
+import {execAsync, execAsyncWithTimeout, wake} from "../utilities";
 import {ZoneDevice} from './platform';
 import {WOLZonePlatform} from "../platform";
 
@@ -47,11 +47,9 @@ export class Windows extends ZoneDevice {
       try {
         this.pluginPlatform.log.debug(`Begin ping ${this.host} (${this.name})`);
 
-        const result = await execAsync(`net rpc info --ipaddress ${this.host} --user ${this.username}%${this.password}`);
-        this.pluginPlatform.log.debug(`End ping ${this.host} (${this.name}): stdout: ${result.stdout}`);
-        this.pluginPlatform.log.debug(`End ping ${this.host} (${this.name}): stderr: ${result.stderr}`);
-
-        this.lastState = result.stderr.length > 0;
+        const result = await execAsyncWithTimeout(`net rpc info --ipaddress ${this.host} --user ${this.username}%${this.password}`);
+        this.pluginPlatform.log.debug(`End ping ${this.host} (${this.name}): ${result}`);
+        this.lastState = !!result;
       } catch (e) {
         this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}):`, e);
         this.lastState = false;

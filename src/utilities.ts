@@ -1,4 +1,4 @@
-import {exec as execSync} from 'child_process';
+import {exec as execSync, ExecException} from 'child_process';
 import {promisify} from 'util';
 
 import wol from 'wake_on_lan';
@@ -19,6 +19,22 @@ export function wake(macAddress: string): Promise<void> {
 
       resolve();
     });
+  });
+}
+
+export function execAsyncWithTimeout(command: string, timeout: number = 5000): Promise<ExecException | string> {
+
+  return new Promise<ExecException | string>((resolve, reject) => {
+
+    execSync(command, (error: ExecException | null, stdout: string, stderr: string) => {
+      if (error) {
+        reject(error);
+      }
+
+      resolve(stdout);
+    });
+
+    setTimeout(reject, timeout);
   });
 }
 
