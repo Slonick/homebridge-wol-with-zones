@@ -22,13 +22,13 @@ export function wake(macAddress: string): Promise<void> {
   });
 }
 
-export function execAsyncWithTimeout(command: string, timeout: number = 5000): Promise<ExecException | string> {
+export function execAsyncWithTimeout(command: string, timeout = 3000): Promise<string> {
 
-  return new Promise<ExecException | string>((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
 
     execSync(command, (error: ExecException | null, stdout: string, stderr: string) => {
       if (error) {
-        reject(error);
+        reject(stderr);
       }
 
       resolve(stdout);
