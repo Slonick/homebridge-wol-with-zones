@@ -46,11 +46,12 @@ export class Windows extends ZoneDevice {
     if (!this.suspendUpdate && !fromCache) {
       try {
         this.pluginPlatform.log.debug(`Begin ping ${this.host} (${this.name})`);
-        const response = await ping.promise.probe(this.host, {
-          timeout: 5
-        });
-        this.pluginPlatform.log.debug(`End ping ${this.host} (${this.name}): ${response.alive}`);
-        this.lastState = response.alive;
+
+        const result = await execAsync(`net rpc info --ipaddress ${this.host} --user ${this.username}%${this.password}`);
+        this.pluginPlatform.log.debug(`End ping ${this.host} (${this.name}): stdout: ${result.stdout}`);
+        this.pluginPlatform.log.debug(`End ping ${this.host} (${this.name}): stderr: ${result.stderr}`);
+
+        this.lastState = result.stderr.length > 0;
       } catch (e) {
         this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}):`, e);
         this.lastState = false;
