@@ -89,7 +89,7 @@ export class MacOS extends ZoneDevice {
 
         this.lastState = this._statusCommand.isOn(result);
       } catch (e) {
-        this.pluginPlatform.log.error(`An error occurred while update status for ${this.name} (${this.host}):`, e);
+        this.pluginPlatform.log.debug(`An error occurred while update status for ${this.name} (${this.host}):`, e);
         this.lastState = false;
       }
     }
